@@ -1,12 +1,17 @@
 import tweepy
 import random
-import time
+import os
+import logging
 
-# Twitter API keys (replace with your actual keys)
-API_KEY = "4VqwHcsMFfURfPGzYyGdPmCmD"
-API_SECRET_KEY = "18tre0LwCiNksaPgmeGMtOmZcKodsCI5EfboMtUk0CijNGUSaX"
-ACCESS_TOKEN = "AAAAAAAAAAAAAAAAAAAAAKm2wwEAAAAAbrkU8fWaNy2OHYbOpeJX0umQK38%3DsaZa1lNA4rfu2kKqM8zvTBXmPyvftrowrQwjZ38v6rX1lWwtAj"
-ACCESS_TOKEN_SECRET = "foO5QmWT653vo1kZK4dw808ME49Y8sHATmzQakoybzTUg"
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger()
+
+# Twitter API keys (retrieved from environment variables)
+API_KEY = os.getenv("API_KEY")
+API_SECRET_KEY = os.getenv("API_SECRET_KEY")
+ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
+ACCESS_TOKEN_SECRET = os.getenv("ACCESS_TOKEN_SECRET")
 
 # Authenticate with Twitter API
 def authenticate_twitter():
@@ -15,9 +20,9 @@ def authenticate_twitter():
     api = tweepy.API(auth)
     try:
         api.verify_credentials()
-        print("Authentication successful")
+        logger.info("Authentication successful")
     except tweepy.TweepError as e:
-        print(f"Error during authentication: {e}")
+        logger.error(f"Error during authentication: {e}")
     return api
 
 # Generate promotional tweets
@@ -32,21 +37,15 @@ def generate_promotional_tweet():
     return random.choice(promotions)
 
 # Post promotional tweets
-def post_promotional_tweet(api):
+def post_promotional_tweet():
+    api = authenticate_twitter()
     tweet = generate_promotional_tweet()
     try:
         api.update_status(tweet)
-        print(f"Tweet posted: {tweet}")
+        logger.info(f"Tweet posted: {tweet}")
     except tweepy.TweepError as e:
-        print(f"Error posting tweet: {e}")
+        logger.error(f"Error posting tweet: {e}")
 
-# Main function
-def main():
-    api = authenticate_twitter()
-    # Tweet every 6 hours
-    while True:
-        post_promotional_tweet(api)
-        time.sleep(6 * 60 * 60)  # 6 hours in seconds
-
+# Entry point for Heroku Scheduler
 if __name__ == "__main__":
-    main()
+    post_promotional_tweet()
